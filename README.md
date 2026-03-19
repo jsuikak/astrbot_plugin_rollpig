@@ -75,6 +75,17 @@ astrbot_plugin_rollpig/
 
 ---
 
+### 素材管理工具
+
+pig_manager.py
+
+启动命令:
+```bash
+streamlit run pig_manager.py --server.port 8080
+```
+
+--- 
+
 ## 🐖 注意事项 🐖
 
 - 新增小猪时只需在 `pig.json` 添加对象，并将对应图片放到 `image/` 文件夹即可 🐷  

@@ -1,0 +1,1 @@
+streamlit run pig_manager.py --server.port 8080
