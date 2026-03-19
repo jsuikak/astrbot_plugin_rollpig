@@ -349,6 +349,13 @@ class RollPigPlugin(Star):
             if (isinstance(seg, At) and str(seg.qq) != event.get_self_id())  # 排除自己
         ]
 
+    def is_at_bot(self, event: AstrMessageEvent) -> bool:
+        """检查消息中是否@了机器人自己"""
+        for seg in event.get_messages():
+            if isinstance(seg, At) and str(seg.qq) == event.get_self_id():
+                return True
+        return False
+
     @filter.command("今日小猪", alias={"抽小猪", "我的小猪", "rollpig"})
     async def roll_pig(self, event: AstrMessageEvent):
         """抽取今日小猪"""
@@ -360,7 +367,9 @@ class RollPigPlugin(Star):
             if len(at_ids) > 1:
                 await event.send(event.plain_result("一次只能抽取一个小猪哦！"))
                 return
-            if len(parts) >= 2:
+            if self.is_at_bot(event):
+                user_id = event.get_self_id()  # 给机器人自己抽
+            elif len(parts) >= 2:
                 if at_ids[0] not in self.admins_id:
                     user_id = at_ids[0]
                 else:
