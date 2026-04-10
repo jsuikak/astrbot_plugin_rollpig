@@ -4,5 +4,11 @@
         "hint": "是否允许通过艾特他人来查看对方的今日小猪，默认为关闭",
         "type": "bool",
         "default": false
+    },
+    "history_days": {
+        "description": "近N天去重窗口",
+        "hint": "默认5天。用户近N天已抽到的小猪会尽量避免重复；当候选不足时会回退到尽量不与昨天重复",
+        "type": "int",
+        "default": 5
     }
 }
