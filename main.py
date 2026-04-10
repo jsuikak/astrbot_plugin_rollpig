@@ -106,6 +106,7 @@ class RollPigPlugin(Star):
             today_cache = {"date": today_str, "records": {}}
         user_records = today_cache["records"]
 
+        # 今日已抽取
         if user_id in user_records:
             pig = user_records[user_id]
             await self.send_rendered_pig(event, pig, user_id)
@@ -113,8 +114,10 @@ class RollPigPlugin(Star):
 
         if not self.pig_list:
             await event.send(event.plain_result("小猪信息加载失败，请检查后台报错！"))
+            # 返回
             return
 
+        # 加载历史记录
         history_data = load_history_file(self.history_path, logger_obj=logger)
         pig, history_data = pick_pig_for_user(
             pig_list=self.pig_list,
