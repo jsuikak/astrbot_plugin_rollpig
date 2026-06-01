@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Any
 
 from PIL import Image as PILImage
-from PIL import ImageDraw, ImageFont
+from PIL import ImageDraw, ImageFont, ImageOps
 
 
 class PigImageRenderer:
@@ -101,6 +101,19 @@ class PigImageRenderer:
         self._log("warning", f"未找到小猪ID {pig_id} 对应的图片文件")
         return None
 
+    def _prepare_avatar(self, image: PILImage.Image) -> PILImage.Image:
+        avatar = ImageOps.exif_transpose(image).convert("RGBA")
+        resampling = getattr(PILImage, "Resampling", PILImage).LANCZOS
+        avatar.thumbnail((self.AVATAR_SIZE, self.AVATAR_SIZE), resampling)
+
+        avatar_canvas = PILImage.new(
+            "RGBA", (self.AVATAR_SIZE, self.AVATAR_SIZE), (255, 255, 255, 0)
+        )
+        avatar_x = (self.AVATAR_SIZE - avatar.width) // 2
+        avatar_y = (self.AVATAR_SIZE - avatar.height) // 2
+        avatar_canvas.alpha_composite(avatar, (avatar_x, avatar_y))
+        return avatar_canvas
+
     def render_pig_image(self, pig_data: dict) -> Path | None:
         pig_id = pig_data.get("id", "")
         pig_name = pig_data.get("name", "未知小猪")
@@ -117,19 +130,8 @@ class PigImageRenderer:
         avatar_path = self.find_image_file(pig_id)
         if avatar_path:
             try:
-                avatar = PILImage.open(avatar_path)
-                avatar.thumbnail((avatar_w, avatar_h))
-                if avatar.size != (avatar_w, avatar_h):
-                    center_x = avatar.width // 2
-                    center_y = avatar.height // 2
-                    half = self.AVATAR_SIZE // 2
-                    crop_box = (
-                        center_x - half,
-                        center_y - half,
-                        center_x + half,
-                        center_y + half,
-                    )
-                    avatar = avatar.crop(crop_box)
+                with PILImage.open(avatar_path) as image:
+                    avatar = self._prepare_avatar(image)
             except Exception as e:
                 self._log("error", f"加载小猪图片失败：{str(e)}")
                 avatar = None
@@ -213,4 +215,3 @@ class PigImageRenderer:
         except Exception as e:
             self._log("error", f"合成图片失败：{str(e)}")
             return None
-
