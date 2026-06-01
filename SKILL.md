@@ -160,6 +160,45 @@ python3 -c "import json, pathlib; pigs=json.loads(pathlib.Path('resource/pig.jso
 sips -g pixelWidth -g pixelHeight resource/image/{id}.png
 ```
 
+## 测试渲染预览（落库后必须执行）
+
+创建完素材并通过基础校验后，必须调用插件真实渲染函数生成预览图，保存到仓库 `tmp/` 目录，让用户直接查看效果并提出调整意见。
+
+要求：
+
+1. 确保 `tmp/` 存在，且已被 `.gitignore` 忽略
+2. 使用 `PigImageRenderer.render_pig_image()`，不要手工拼图或绕过渲染函数
+3. 预览文件命名为 `tmp/render-{id}.png`
+4. 如果一次新增多只小猪，每只都生成对应预览图
+5. 交付时必须给出预览图路径，并提醒用户可基于预览继续提出修改
+
+推荐命令：
+
+```bash
+mkdir -p tmp
+python3 - <<'PY'
+import json
+import shutil
+from pathlib import Path
+
+from rollpig.render import PigImageRenderer
+
+root = Path.cwd()
+pig_id = "{id}"
+pigs = {
+    pig["id"]: pig
+    for pig in json.loads((root / "resource/pig.json").read_text("utf-8"))
+}
+renderer = PigImageRenderer(root / "resource/image", root / "resource/font")
+rendered = renderer.render_pig_image(pigs[pig_id])
+if rendered is None:
+    raise RuntimeError(f"failed to render {pig_id}")
+target = root / "tmp" / f"render-{pig_id}.png"
+shutil.copyfile(rendered, target)
+print(target)
+PY
+```
+
 ## 可选人工验收
 
 - 启动管理工具：`streamlit run pig_manager.py --server.port 8080`
@@ -174,3 +213,4 @@ sips -g pixelWidth -g pixelHeight resource/image/{id}.png
 3. 本次生图使用的原始提示词（完整文本）
 4. JSON 已追加对象（可贴对象本体）
 5. 校验结果（通过/失败 + 原因）
+6. 渲染预览图路径：`tmp/render-{id}.png`
